@@ -1,0 +1,124 @@
+#+TITLE: Report
+#+AUTHOR: 190022658
+#+OPTIONS: toc:nil
+#+OPTIONS: ^:nil
+#+OPTIONS: inline:t
+
+* Overview
+In the practical we were given a scenario and were required to design an ER model for it. We then needed to convert the model into a relational schema and identify all the full functional dependencies in the relational schema. Using that we needed to show which normalisation form was achieved.\\
+\\
+All of the listed requirements have been done.
+* ER Diagram
+The ER diagram is in the same folder in two formats, it can be opened in the browser in the svg format and in diagrams.net in the drawio format.
+[[./er-diagram.drawio.png]]
+* Relational schema
+- person ( _id_: integer, name: string, gender: string, date_of_birth: date, date_of_death: date, age: integer )
+- historical_figure ( _id*_: integer, summary: string )
+- state ( _id_: integer, name: string, description: string, ruling_title: string )
+- country ( _id_: integer, name: string )
+- battle ( _id_: integer, name: string, date: date, location: (float, float), state_id*: integer )
+- source ( _ISBN_: string, title: string )
+- user ( _email_address_: string, password: string, has_expansion_pack: boolean )
+- title ( _state_id*_: integer , _fief_: string, _rank_: string, _start_date_: date, _end_date_: date, historical_figure_id*: integer )
+\\
+- is_married_to ( _person_id*_: integer, _person2_id*_: integer, wedding_date: date, divorce_date: date )
+- parent_of ( _parent_id*_: integer, _child_id*_: integer )
+- occupied ( _state_id*_: integer, _country_id*_: integer )
+- b_reference ( _battle_id*_: integer, _ISBN*_: string, page_number: integer )
+- h_reference ( _historical_figure_id*_: integer, _ISBN*_: string, page_number: integer )
+- fought_in ( _historical_figure_id*_: integer, _battle_id*_: integer, is_victorious: boolean )
+- wrote ( _person_id*_: integer, _ISBN*_: string )
+
+* Design
+** ER Model
+For the ER model I first identified nouns and then the attributes as follows.
+- Person
+  - name, gender, date_of_birth, date_of_death, age()
+- Historical figure inherited from person
+  - summary
+- Title (weak set)
+  - fief, rank, duration
+- State
+  - name, description, ruling title
+- Modern country
+  - name
+- Battle
+  - name, date, location
+- Source
+  - title, ISBN
+- User
+  - email, password, has_expansion_pack
+\\
+Then I figured the relationships they should have between them as follows.
+- Person and Person (person is parent of person)
+- Person and Person (person is married to person)
+- Person and Title (person has titles)
+- Title and State (title are of a state)
+- State and Modern Country (state occupied countries)
+- Battle and Person and State (battle between persons in state)
+\\
+A historical figure and a battle can only have a book as a reference for a single page. This constraint is added because of the specification. This can be changed by making the page number attribute of the relationship multi-valued.\\
+\\
+A battle is fought in a single state or no state.\\
+\\
+I used a superclass "person" for historical figure as it allows non-historic figures to be authors of sources as well.\\
+\\
+Title is a weak entity set because there is candidate key and so that no information is lost.\\
+\\
+The user entity can have bookmarks and other features depending on the scenario but this is enough for the base scenario.\\
+\\
+Relationship attributes was neccessary because of many-to-many relationship and made the diagram consise and easy to understand.\\
+\\
+The only derived attribute is the age of a person, and while it can be a simple attribute it makes more sense this way as the information needed to compute it is already available.\\
+\\
+The battle name could be the primary key but that would require the assumption that each battle name is unique which might or might not be true.
+
+** Relational Schema
+Here I simply transferred the attributes to the schema. In cases of one-to-many or many-to-one relations, I added a foreign key of the "many" entity set to the "one" entity set. In the case of many-to-many relations, I added relational schemas with private keys of both entity sets along with relation attributes where applicable.\\
+\\
+I chose a tuple of two floats for the location to be specific.
+** Normalisation
+The full functional dependencies are as follows
+*** person
+id -> name\\
+id -> gender\\
+id -> date_of_birth\\
+id -> date_of_death\\
+id -> age\\
+{ date_of_birth, date_of_death } -> age\\
+*** historical_figure
+id -> summary\\
+*** state
+id -> name\\
+id -> description\\
+id -> ruling_title\\
+*** country
+id -> name\\
+*** battle
+id -> name\\
+id -> date\\
+id -> location\\
+id -> state_id\\
+*** source
+ISBN -> title\\
+*** user
+email_address -> password\\
+email_address -> has_expansion_pack\\
+*** title
+{ state_id, fief, rank, start_date, end_date } -> historical_figure_id\\
+
+*** Conclusion
+It is 1NF because there is no searching using a name given in the scenario and all relevant relational access is atomic.\\
+\\
+It is 2NF because all non-prime attributes are fully functionally dependent on the candidate keys.\\
+\\
+Not a 3NF or BCNF because a derived attribute exists. A derived attribute is a transitive dependency. In this case in the relation, person, there exists\\
+id -> date_of_birth\\
+id -> date_of_death\\
+{ date_of_birth, date_of_death } -> age\\
+id -> age\\
+\\
+Thinking about it, the id in battle might be dependent on the attributes - name, date, location.
+
+* Conclusion
+This practical reinforced the theory learnt and helped practice building database models.
